@@ -11,7 +11,7 @@ fonts/               渲染字体（Doto 点阵数字 / Space Mono / Noto Sans+S
 renderer/
   config.py          env、HA ENTITIES 实体表、天气映射、路径 —— 换环境先改这里
   panels.py          面板抽象：BWPanel / E6Panel（量化、抖动、导出、preview）
-  draw.py            Canvas：语义色 + 最终像素坐标的绘图原语（tile/pill/ring/dotsicon/wrap…）
+  draw.py            Canvas：语义色 + 最终像素坐标的绘图原语（tile/pill/ring/dotsicon/hatch/wrap…）
   datasources.py     HA REST states、天气摘要、FreshRSS 新闻（全部优雅降级）
   imagesource.py     照片源 bing/nas/picsum/ai → (PIL RGB, 标题提示)
   ai.py              claude/codex CLI 封装：text/caption_image/generate_image + 文件缓存
@@ -45,6 +45,11 @@ out/                 渲染产物 + AI 缓存（gitignored）
 
 **换到新家庭 / 新 HA**：改 `.env`（HA_URL/HA_TOKEN/HA_SSH_*）+ `config.py` 的 `ENTITIES`。
 缺失实体自动显示 `--`，可以先跑起来再逐个补。
+
+**表达灰度**：照片抖动模式 `EINK_DITHER=fs|bayer|bluenoise`（panels.py `_threshold_map`，
+蓝噪声纹理是 `tools/gen_bluenoise.py` 预生成的 `renderer/assets/bluenoise64.png`）；
+UI 区块的"灰色"用 `c.hatch(x,y,w,h, style=diag|cross|lines|dots, spacing=密度)` 排线，
+不要试图画真灰色（会被量化成纯黑/白）。
 
 **加一种风格**：
 ```python

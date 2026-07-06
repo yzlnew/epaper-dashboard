@@ -103,6 +103,23 @@ esphome run epaper-e6.yaml
 - `ai` — 每日 AI 生成插画（主题按日轮换，日缓存；默认走 codex imagegen，
   或用 `EINK_IMAGEGEN_CMD='cmd --prompt {prompt} --out {out}'` 接任意生图后端）
 
+### 灰阶的替代：抖动与排线
+
+墨水屏无灰阶，照片靠抖动用空间分辨率换色调。`EINK_DITHER` 选纹理风格（两块屏通用）：
+
+| 模式 | 算法 | 观感 |
+|---|---|---|
+| `fs`（默认） | Floyd–Steinberg 误差扩散 | 有机颗粒，色调最忠实 |
+| `bayer` | 8×8 有序抖动 | 规则网点，印刷/版画感 |
+| `bluenoise` | 蓝噪声阈值（void-and-cluster 预生成，见 `tools/gen_bluenoise.py`） | 胶片颗粒感，无方向性纹理 |
+
+![](docs/previews/dither_compare.png)
+
+UI 里的「灰色」则用 `Canvas.hatch()` 排线原语：`diag`/`cross`/`lines`/`dots` 四种图案，
+密度（spacing）即明度——这是 1-bit 设备表达中间调的印刷传统。
+
+![](docs/previews/hatch_demo.png)
+
 ## AI 集成
 
 `renderer/ai.py` 直接调用本机的 agent CLI（自带鉴权，无需在此配 API key）：

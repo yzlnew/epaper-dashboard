@@ -58,6 +58,10 @@ EN_MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
 # bing | nas | picsum | ai   (see imagesource.py)
 PHOTO_SOURCE = (os.getenv("EINK_PHOTO_SOURCE") or "bing").lower()
 NAS_PHOTO_DIR = os.getenv("EINK_NAS_PHOTO_DIR") or ""
+# Photo dithering: fs (Floyd–Steinberg error diffusion, default) | bayer
+# (ordered 8x8, print-like crosshatch texture) | bluenoise (ordered with a
+# blue-noise threshold map, film-grain texture)
+DITHER = (os.getenv("EINK_DITHER") or "fs").lower()
 
 # ── News ──────────────────────────────────────────────────────────────────────
 # Optional FreshRSS bridge (reuses /root/ha the_daily scorer). Point at the

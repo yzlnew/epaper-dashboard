@@ -19,9 +19,12 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageEnhance, ImageOps
 
 from . import config
+
+ASSETS = Path(__file__).resolve().parent / "assets"
 
 # Six-colour source palette: pure RGB the device must RECEIVE (each lands in the
 # right color_to_hex bucket), and the muted RGB the physical panel SHOWS.
@@ -41,6 +44,34 @@ E6_PANEL_RGB = {
     "blue":   (46, 66, 150),
     "yellow": (222, 190, 60),
 }
+
+
+# ── ordered dithering (EINK_DITHER=bayer|bluenoise; fs = error diffusion) ────
+_BAYER8 = np.array([
+    [0, 32, 8, 40, 2, 34, 10, 42],
+    [48, 16, 56, 24, 50, 18, 58, 26],
+    [12, 44, 4, 36, 14, 46, 6, 38],
+    [60, 28, 52, 20, 62, 30, 54, 22],
+    [3, 35, 11, 43, 1, 33, 9, 41],
+    [51, 19, 59, 27, 49, 17, 57, 25],
+    [15, 47, 7, 39, 13, 45, 5, 37],
+    [63, 31, 55, 23, 61, 29, 53, 21],
+])
+
+
+def _threshold_map(size: tuple[int, int]) -> np.ndarray | None:
+    """Tiled 0..255 threshold matrix for the configured ordered mode, or None
+    for error diffusion (fs)."""
+    mode = config.DITHER
+    if mode == "bayer":
+        base = ((_BAYER8 + 0.5) * 4).astype(np.uint8)          # 0..255
+    elif mode == "bluenoise":
+        base = np.asarray(Image.open(ASSETS / "bluenoise64.png"))
+    else:
+        return None
+    w, h = size
+    reps = (h // base.shape[0] + 1, w // base.shape[1] + 1)
+    return np.tile(base, reps)[:h, :w]
 
 
 def _quantize_e6(img: Image.Image, palette: dict) -> Image.Image:
@@ -125,7 +156,11 @@ class BWPanel(Panel):
         im = ImageOps.fit(img.convert("RGB"), size, Image.LANCZOS)
         g = ImageOps.autocontrast(im.convert("L"), cutoff=1)
         g = ImageEnhance.Contrast(g).enhance(1.12)
-        return g.convert("1", dither=Image.FLOYDSTEINBERG).convert("RGB")
+        t = _threshold_map(g.size)
+        if t is None:  # fs
+            return g.convert("1", dither=Image.FLOYDSTEINBERG).convert("RGB")
+        out = (np.asarray(g) > t).astype(np.uint8) * 255
+        return Image.fromarray(out, "L").convert("RGB")
 
     def export(self, img, out):
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -161,7 +196,14 @@ class E6Panel(Panel):
         pal = Image.new("P", (1, 1))
         flat = [v for c in E6_INK.values() for v in c]
         pal.putpalette(flat + flat[:3] * (256 - len(E6_INK)))
-        return im.quantize(palette=pal, dither=Image.FLOYDSTEINBERG).convert("RGB")
+        t = _threshold_map(im.size)
+        if t is None:  # fs
+            return im.quantize(palette=pal, dither=Image.FLOYDSTEINBERG).convert("RGB")
+        # ordered dithering to a palette: bias each pixel by the threshold map
+        # (spread ≈ typical palette quantisation step), then snap to nearest ink
+        arr = np.asarray(im).astype(np.float32) + (t[..., None] / 255.0 - 0.5) * 84
+        biased = Image.fromarray(arr.clip(0, 255).astype(np.uint8), "RGB")
+        return biased.quantize(palette=pal, dither=Image.Dither.NONE).convert("RGB")
 
     def export(self, img, out):
         out.parent.mkdir(parents=True, exist_ok=True)

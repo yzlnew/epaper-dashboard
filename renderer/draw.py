@@ -13,7 +13,7 @@ from __future__ import annotations
 import math
 from functools import lru_cache
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageChops, ImageDraw, ImageFont
 
 from . import config
 from .panels import Panel
@@ -194,6 +194,40 @@ class Canvas:
             for px in (cx - 6, cx + 2, cx + 10):
                 self.dot(px, cy + 8, 2.2, col)
                 self.dot(px, cy + 14, 2.2, col)
+
+    def hatch(self, x, y, w, h, style="diag", spacing=6, col="black", width=1, r=0):
+        """Fill a region with a line/dot pattern — the 1-bit way to say "gray".
+        Perceived darkness = ink coverage: tune spacing (denser = darker) and
+        width. styles: diag (////), cross (crosshatch), lines (horizontal),
+        dots (stipple grid). r rounds the region's corners."""
+        s = self.s
+        x0, y0 = int(x * s), int(y * s)
+        W2, H2 = max(1, int(w * s)), max(1, int(h * s))
+        pat = Image.new("L", (W2, H2), 0)
+        pd = ImageDraw.Draw(pat)
+        sp = max(2, int(spacing * s))
+        lw = max(1, int(width * s))
+        if style in ("diag", "cross"):
+            for o in range(-H2, W2 + H2, sp):
+                pd.line([o, H2, o + H2, 0], fill=255, width=lw)
+        if style == "cross":
+            for o in range(-H2, W2 + H2, sp):
+                pd.line([o, 0, o + H2, H2], fill=255, width=lw)
+        elif style == "lines":
+            for yy in range(0, H2, sp):
+                pd.line([0, yy, W2, yy], fill=255, width=lw)
+        elif style == "dots":
+            rr = max(1, lw)
+            for j, yy in enumerate(range(0, H2, sp)):
+                for xx in range(sp // 2 if j % 2 else 0, W2, sp):
+                    pd.ellipse([xx - rr, yy - rr, xx + rr, yy + rr], fill=255)
+        if r:
+            mask = Image.new("L", (W2, H2), 0)
+            ImageDraw.Draw(mask).rounded_rectangle(
+                [0, 0, W2 - 1, H2 - 1], radius=int(r * s), fill=255)
+            pat = ImageChops.multiply(pat, mask)
+        solid = Image.new("RGB", (W2, H2), self.col(col))
+        self.img.paste(solid, (x0, y0), pat)
 
     def ring(self, cx, cy, R, ratio, w=7, col="black", track="black"):
         for a in range(0, 360, 12):  # faint dotted track
