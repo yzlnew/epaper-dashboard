@@ -4,7 +4,7 @@ STYLES to make it available to render.py / rotate.py."""
 
 from __future__ import annotations
 
-from . import gallery, journal, mathart, nothing, poster
+from . import comic, gallery, journal, mathart, nothing, poster
 
 STYLES = {
     "nothing": nothing.render,   # Nothing UI tiles (info dashboard)
@@ -12,4 +12,5 @@ STYLES = {
     "poster": poster.render,     # photo + oversized date + AI one-liner
     "journal": journal.render,   # AI morning-paper front page
     "mathart": mathart.render,   # generated fractals / attractors / curves
+    "comic": comic.render,       # American comic-book front page
 }

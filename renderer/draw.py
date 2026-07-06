@@ -66,6 +66,10 @@ class Canvas:
     def garamond(self, px, wght=600):
         return _font(GARAMOND, int(px * self.s), (wght,))
 
+    def font(self, filename, px):
+        """Load any TTF from fonts/ by filename (style-specific faces)."""
+        return _font(filename, int(px * self.s), None)
+
     def pixel(self, px=12):
         """CJK pixel font (Fusion Pixel). Crisp on e-ink ONLY at integer
         multiples of the native size (12 → 12/24/36; 8 → 8/16) on an ss=1

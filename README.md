@@ -12,9 +12,9 @@ AI 生成）与 AI 个性化文本（claude / codex CLI 生成晨报、每日一
 |---|---|
 | ![](docs/previews/e6_gallery_preview.png) | ![](docs/previews/bw_poster_preview.png) |
 
-| mathart (E6) | mathart (B/W) |
+| mathart (E6) | comic (E6) |
 |---|---|
-| ![](docs/previews/e6_mathart_preview.png) | ![](docs/previews/bw_mathart_preview.png) |
+| ![](docs/previews/e6_mathart_preview.png) | ![](docs/previews/e6_comic_preview.png) |
 
 ## 架构
 
@@ -92,6 +92,7 @@ esphome run epaper-e6.yaml
 | `poster` | 上 2/3 照片，下方超大日期 + 天气 + 每日一句 | 背景 | 每日一句（天气感知，日缓存） |
 | `journal` | 报纸头版：AI 晨报导语 + 要闻 + 家居数据侧栏 | — | 晨报导语（新闻+天气综述，日缓存） |
 | `mathart` | 程序生成数学图案 + 公式标注：Julia/Mandelbrot/牛顿分形/de Jong 吸引子/harmonograph，按日期轮换（numpy 计算，无网络依赖） | 代码生成 | — |
+| `comic` | 美漫头版：粗框分镜+投影、温度爆炸星、新闻对话气泡、Ben-Day 网点、警报冲出画框、黄色 NARRATOR 旁白框 | — | 每日旁白（日缓存） |
 
 所有风格同时兼容两种面板；照片风格拉取失败时自动回退 `nothing`，屏幕永远不会白屏/报错。
 
@@ -149,6 +150,9 @@ UI 里的「灰色」则用 `Canvas.hatch()` 排线原语：`diag`/`cross`/`line
 | [Space Mono](https://fonts.google.com/specimen/Space+Mono) | Colophon Foundry | OFL 1.1 | 等宽标签、公式、英文标题 |
 | [Noto Sans SC / Noto Serif SC](https://fonts.google.com/noto) | Google | OFL 1.1 | 大号中文、备用 CJK |
 | [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) | Christian Thalmann | OFL 1.1 | journal 报头衬线 |
+| [Bangers](https://fonts.google.com/specimen/Bangers) | Vernon Adams | OFL 1.1 | comic 标题/爆炸星大写体 |
+| [Comic Neue](https://fonts.google.com/specimen/Comic+Neue) | Craig Rozynski | OFL 1.1 | comic 气泡英文（Comic Sans 的开源后继） |
+| [站酷快乐体 ZCOOL KuaiLe](https://fonts.google.com/specimen/ZCOOL+KuaiLe) | 站酷 / 刘兵克团队 | OFL 1.1 | comic 中文手写感（旁白/日期/气泡） |
 
 感谢以上开源字体项目；字体文件随仓库分发于 `fonts/`，均遵循 SIL Open Font License 1.1。
 
