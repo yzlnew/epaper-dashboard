@@ -1,0 +1,100 @@
+# B/W panel: ESP32-S3 devkit + Waveshare 7.5" v2 (800x480, 1-bit).
+#
+# Rendering happens OFF-device: HA serves a pre-rendered 800x480 1-bit PNG at
+# /local/eink/dashboard.png (built by `renderer.rotate --panel bw` on the
+# always-on box). The panel just downloads it via `online_image` and blits it
+# full-screen — arbitrary CJK text, dithered photos, any layout, no on-device
+# glyph declarations.
+#
+# NOTE: this exact firmware displays the PNG inverted; the renderer pre-inverts
+# (EINK_INVERT=1) so the two cancel out. Change the online_image URL and the
+# static IP below to match your network.
+
+esphome:
+  name: trmnl
+  friendly_name: TRMNL
+  on_boot:
+    priority: -100
+    then:
+      - delay: 8s
+      - component.update: dashboard_img
+
+esp32:
+  board: esp32-s3-devkitc-1
+  framework:
+    type: arduino
+
+psram:
+  mode: octal
+  speed: 80MHz
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+  on_client_connected:
+    - delay: 3s
+    - component.update: dashboard_img
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  manual_ip:
+    static_ip: 192.168.50.135
+    gateway: 192.168.50.1
+    subnet: 255.255.255.0
+  ap:
+    ssid: "Trmnl Fallback Hotspot"
+    password: !secret ap_password
+
+captive_portal:
+
+time:
+  - platform: homeassistant
+    id: ha_time
+
+# ── Pull the HA-rendered dashboard image ─────────────────────────────────────
+http_request:
+  useragent: esphome-trmnl
+  timeout: 15s
+
+online_image:
+  - url: "http://192.168.50.154:8123/local/eink/dashboard.png"
+    id: dashboard_img
+    format: PNG
+    type: BINARY
+    update_interval: never  # driven by the interval + on_boot / on_client_connected below
+    on_download_finished:
+      - component.update: main_display
+    on_error:
+      - logger.log: "eink: dashboard image download failed"
+
+# Refresh every 10 min (server re-renders on its own cron).
+interval:
+  - interval: 10min
+    then:
+      - component.update: dashboard_img
+
+# ── E-paper panel ────────────────────────────────────────────────────────────
+spi:
+  clk_pin: GPIO7
+  mosi_pin: GPIO9
+
+display:
+  - platform: waveshare_epaper
+    id: main_display
+    model: 7.50inv2
+    cs_pin: GPIO44
+    dc_pin: GPIO10
+    reset_pin: GPIO38
+    busy_pin:
+      number: GPIO4
+      inverted: true
+    update_interval: never
+    lambda: |-
+      it.image(0, 0, id(dashboard_img));

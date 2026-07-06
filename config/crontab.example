@@ -1,0 +1,12 @@
+# E-paper dashboard cron — runs on any always-on box with network access to HA.
+# Each tick rotates the panel to the next style in its playlist and deploys.
+# AI calls (poster one-liner, journal brief, photo captions) are cached per
+# day/photo, so only the first tick of the day pays an agent call.
+#
+# Install: crontab -e and paste (adjust the repo path).
+
+# B/W TRMNL 7.5": every 10 min
+*/10 * * * * cd /root/epaper-dashboard && set -a && . ./.env && set +a && .venv/bin/python -m renderer.rotate --panel bw >> /var/log/eink-bw.log 2>&1
+
+# Six-colour E6: every 10 min, offset 5 min from the B/W panel
+5-59/10 * * * * cd /root/epaper-dashboard && set -a && . ./.env && set +a && .venv/bin/python -m renderer.rotate --panel e6 >> /var/log/eink-e6.log 2>&1
