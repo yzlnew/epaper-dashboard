@@ -12,6 +12,10 @@ AI 生成）与 AI 个性化文本（claude / codex CLI 生成晨报、每日一
 |---|---|
 | ![](docs/previews/e6_gallery_preview.png) | ![](docs/previews/bw_poster_preview.png) |
 
+| mathart (E6) | mathart (B/W) |
+|---|---|
+| ![](docs/previews/e6_mathart_preview.png) | ![](docs/previews/bw_mathart_preview.png) |
+
 ## 架构
 
 渲染完全在服务端（任意常开 Linux 盒子）完成，屏端固件只做一件事：定时下载一张 PNG 并整屏刷新。
@@ -87,6 +91,7 @@ esphome run epaper-e6.yaml
 | `gallery` | 全屏照片 + 底部日期/说明条 | 全屏 | 可选：图片描述（`EINK_AI_CAPTION=1`） |
 | `poster` | 上 2/3 照片，下方超大日期 + 天气 + 每日一句 | 背景 | 每日一句（天气感知，日缓存） |
 | `journal` | 报纸头版：AI 晨报导语 + 要闻 + 家居数据侧栏 | — | 晨报导语（新闻+天气综述，日缓存） |
+| `mathart` | 程序生成数学图案 + 公式标注：Julia/Mandelbrot/牛顿分形/de Jong 吸引子/harmonograph，按日期轮换（numpy 计算，无网络依赖） | 代码生成 | — |
 
 所有风格同时兼容两种面板；照片风格拉取失败时自动回退 `nothing`，屏幕永远不会白屏/报错。
 

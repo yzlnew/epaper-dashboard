@@ -27,7 +27,8 @@ from .render import build_ctx
 from .panels import get_panel
 from .styles import STYLES
 
-DEFAULT_PLAYLIST = {"bw": "nothing,gallery", "e6": "nothing,poster,gallery,journal"}
+DEFAULT_PLAYLIST = {"bw": "nothing,gallery,mathart",
+                    "e6": "nothing,poster,gallery,journal,mathart"}
 
 
 def playlist(panel_name: str) -> list[str]:
