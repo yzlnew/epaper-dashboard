@@ -20,9 +20,6 @@ def render(panel, ctx):
 
     LAB = c.mono(13)
     LABB = c.mono(13, bold=True)
-    CJKS = c.sans(12)
-    CJKW = c.sans(30, 600)
-    NEWSF = c.sans(15, 400)
 
     GAP, M = 16, 20
 
@@ -49,7 +46,7 @@ def render(panel, ctx):
     c.dotsicon(wx + 46, ty + 74, w["icon"], R=18, col=icol)
     wt = ds.num(w["temp"], "%.0f")
     c.text(wx + 20, ty + 108, f"{wt}°", c.fit_doto(f"{wt}°", ww - 40, [64, 56, 48]))
-    c.text(wx + 20, ty + th - 46, w["cn"], CJKW, fill="blue")
+    c.ptext(wx + 20, ty + th - 42, w["cn"], px=24, fill="blue")
 
     # CALENDAR — inverted accent card (red on colour, black on B/W)
     lx, lw = wx + ww + GAP, panel.W - M - (wx + ww + GAP)
@@ -101,7 +98,7 @@ def render(panel, ctx):
     rtxt = ds.num(hug, "%.0f") + ("!" if (hug is not None and hug > 80) else "")
     c.text(ax + aw / 2, by + 92, rtxt, c.fit_doto(rtxt, 84, [40, 34, 28]),
            anchor="mm", fill="white")
-    c.text(ax + aw / 2, by + 146, "甲醛 μg/m³", CJKS, anchor="ma", fill="white")
+    c.ptext(ax + aw / 2, by + 148, "甲醛 μg/m³", px=12, anchor="ma", fill="white")
     c.text(ax + 20, by + bh - 46, "PM2.5", LAB, fill="white")
     c.text(ax + aw - 20, by + bh - 46, ds.num(pm, "%.0f"), LABB, fill="white", anchor="ra")
     c.text(ax + 20, by + bh - 24, "CO2", LAB, fill="white")
@@ -112,14 +109,15 @@ def render(panel, ctx):
     nw = panel.W - M - nx
     c.tile(nx, by, nw, bh)
     c.header(nx + 20, by + 16, "NEWS", accent="red")
-    ny = by + 46
+    ny = by + 48
+    PF = c.pixel(12)
     if not news:
-        c.text(nx + 20, ny, "暂无新闻 / NO FEED", NEWSF)
+        c.ptext(nx + 20, ny, "暂无新闻 / NO FEED", 12)
     for it in news[:4]:
-        if ny > by + bh - 30:
+        if ny > by + bh - 26:
             break
-        c.text(nx + 20, ny + 2, "●", CJKS, fill="red")
-        c.text(nx + 36, ny, c.ellipsize(NEWSF, it.get("title") or "", nw - 46), NEWSF)
+        c.ptext(nx + 20, ny, "●", 12, fill="red")
+        c.ptext(nx + 36, ny, c.ellipsize(PF, it.get("title") or "", nw - 46), 12)
         ny += 30
 
     return c.finish()

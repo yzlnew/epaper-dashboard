@@ -111,6 +111,27 @@ esphome run epaper-e6.yaml
 - 文本（晨报/每日一句）按天缓存；图片描述按图片内容哈希缓存
 - 全部调用失败都有降级：poster 用内置句子、journal 去掉导语、gallery 用图片源自带标题
 
+## 字体
+
+墨水屏是无灰阶设备，小号中文用平滑字体（抗锯齿→阈值/量化）会笔画发虚。本项目的字号规范：
+
+- **小号中文（正文/标签/新闻，12px 与 24px）**：Fusion Pixel 像素字体，在原生 12px 的整数倍
+  下关闭抗锯齿渲染（`Canvas.ptext`），像素严格落在屏幕网格上，任何面板上都锐利
+- **大号数字**：Doto 点阵字体（原生分辨率最清晰，勿超采样）
+- **英文标签/公式**：Space Mono；**≥24px 大号中文**或印刷感场景仍可用 Noto（AA 后量化可接受）
+
+### 字体致谢
+
+| 字体 | 作者 / 来源 | 许可 | 用途 |
+|---|---|---|---|
+| [Fusion Pixel Font 缝合像素字体](https://github.com/TakWolf/fusion-pixel-font)（8px/12px 简中） | TakWolf（缝合自方舟像素、美咲フォント、Galmuri 等） | OFL 1.1 | 小号中文正文与标签 |
+| [Doto](https://fonts.google.com/specimen/Doto) | Google Fonts | OFL 1.1 | 点阵大数字（时钟/日期/温度） |
+| [Space Mono](https://fonts.google.com/specimen/Space+Mono) | Colophon Foundry | OFL 1.1 | 等宽标签、公式、英文标题 |
+| [Noto Sans SC / Noto Serif SC](https://fonts.google.com/noto) | Google | OFL 1.1 | 大号中文、备用 CJK |
+| [Cormorant Garamond](https://fonts.google.com/specimen/Cormorant+Garamond) | Christian Thalmann | OFL 1.1 | journal 报头衬线 |
+
+感谢以上开源字体项目；字体文件随仓库分发于 `fonts/`，均遵循 SIL Open Font License 1.1。
+
 ## 扩展
 
 - **加风格**：在 `renderer/styles/` 写一个 `render(panel, ctx) -> PIL.Image` 模块，

@@ -78,8 +78,8 @@ def render(panel, ctx):
 
     cap = _caption(photo, hint)
     if cap:
-        capf = c.sans(16, 500)
+        capf = c.pixel(12)
         shown = c.ellipsize(capf, cap, panel.W - 220)
-        c.text(panel.W - 20, y0 + BAR / 2, shown, capf, fill="white", anchor="rm")
+        c.ptext(panel.W - 20, y0 + BAR / 2, shown, 12, fill="white", anchor="rm")
         c.dot(panel.W - 28 - c.tw(shown, capf) - 14, y0 + BAR / 2, 3, dot_col)
     return c.finish()

@@ -29,8 +29,9 @@ out/                 渲染产物 + AI 缓存（gitignored）
 2. **E6 设备图必须是六个纯 INK 色**。`E6Panel.export()` 逐像素镜像 ESPHome
    `epaper_spi color_to_hex()`（灰差阈值 50 + 原色角点测试）。改调色板前先确认新 RGB
    落进正确的颜色桶。preview PNG 用 PANEL_RGB（面板真实暗淡观感），给人看的一律看 preview。
-3. **预抖动图像只能贴 ss=1 画布**（`Canvas.paste` 有断言）。照片风格整个用 `Canvas(panel, ss=1)`；
-   纯文本/矢量风格用默认 ss（bw=1 保 Doto 点阵锐利，e6=2 保中文平滑）。
+3. **预抖动图像和像素字体都只能落在 ss=1 画布**（`Canvas.paste`/`pixel` 有断言）。
+   两个面板 default_ss 均为 1（Doto 点阵与像素中文都要求像素对齐；超采样+降采样正是
+   之前中文发虚的原因），除非某风格完全不用像素字体且确有曲线平滑需求，才显式传 ss=2。
 4. **黑白面板的反色**：TRMNL 固件显示时会把 PNG 反色，`EINK_INVERT=1` 让 export 预反色抵消。
    不要在风格层自己反色。
 5. **AI 调用必须缓存 + 降级**：走 `ai.try_cached_text()` 或自建内容哈希缓存（gallery 示例）；
@@ -78,8 +79,12 @@ cd /root/epaper-dashboard && set -a && . ./.env && set +a
 
 ## 已知坑
 
-- Space Mono / Doto 无 CJK 和下标字符（₂、℃ 部分变体）：中文用 `c.sans/serif`，
-  写 "CO2" 不写 "CO₂"；混排用 `c.text_mixed`。
+- **小号中文（<24px）一律 `c.ptext()`**（Fusion Pixel，原生 12px 的整数倍、ss=1、
+  关抗锯齿）——Noto 等平滑字体在小字号经 AA→阈值/量化后笔画发虚，这是墨水屏中文模糊的
+  头号原因。≥24px 的大字或印刷感场景才用 `c.sans/serif`。测量宽度用 `c.pixel(px)` 配
+  `c.tw/ellipsize/wrap`。
+- Space Mono / Doto 无 CJK 和下标字符（₂、℃ 部分变体）：写 "CO2" 不写 "CO₂"；
+  混排用 `c.text_mixed`。fusion-pixel-8px 缺 μ（12px 版齐全）。
 - `Image.convert("1")` 默认带抖动，文本导出要的是阈值 —— 已封装在 `BWPanel.export`，别绕过。
 - HA SSH add-on 没有 SFTP：deploy 的 paramiko 路径走 `cat > file` exec 通道，别改成 sftp。
 - `mode "1"` 图像用 ImageChops.invert 会产生 254/255 脏值，反色永远在 L 空间做。

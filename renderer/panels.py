@@ -145,7 +145,9 @@ class BWPanel(Panel):
 class E6Panel(Panel):
     name = "e6"
     remote_png = "dashboard_e6.png"
-    default_ss = 2          # smoother CJK/curves; quantised back to 6 colours
+    # 1, not 2: small CJK now uses pixel fonts, which must land on the final
+    # pixel grid — supersampling + downscale is what made them look blurry.
+    default_ss = 1
     is_color = True
 
     def color(self, name: str) -> tuple[int, int, int]:

@@ -24,6 +24,8 @@ MONOB = "SpaceMono-Bold.ttf"
 SANS = "NotoSansSC.ttf"
 SERIF = "NotoSerifSC.ttf"
 GARAMOND = "CormorantGaramond.ttf"
+PIXEL12 = "fusion-pixel-12px-proportional-zh_hans.ttf"
+PIXEL8 = "fusion-pixel-8px-proportional-zh_hans.ttf"
 
 
 @lru_cache(maxsize=256)
@@ -64,9 +66,27 @@ class Canvas:
     def garamond(self, px, wght=600):
         return _font(GARAMOND, int(px * self.s), (wght,))
 
+    def pixel(self, px=12):
+        """CJK pixel font (Fusion Pixel). Crisp on e-ink ONLY at integer
+        multiples of the native size (12 → 12/24/36; 8 → 8/16) on an ss=1
+        canvas, drawn with antialiasing off — use via ptext()."""
+        native = 8 if px % 12 else 12
+        assert px % native == 0, f"pixel font size {px} not a multiple of {native}"
+        assert self.s == 1, "pixel fonts need an ss=1 canvas (downscale blurs the grid)"
+        return _font(PIXEL8 if native == 8 else PIXEL12, px, None)
+
     # ── text ─────────────────────────────────────────────────────────────────
-    def text(self, x, y, t, font, fill="black", anchor=None):
+    def text(self, x, y, t, font, fill="black", anchor=None, aa=True):
+        if not aa:
+            prev = self.d.fontmode
+            self.d.fontmode = "1"   # bilevel rendering: no antialiasing
         self.d.text((x * self.s, y * self.s), t, font=font, fill=self.col(fill), anchor=anchor)
+        if not aa:
+            self.d.fontmode = prev
+
+    def ptext(self, x, y, t, px=12, fill="black", anchor=None):
+        """Pixel-font text: native-multiple size, antialiasing off."""
+        self.text(x, y, t, self.pixel(px), fill=fill, anchor=anchor, aa=False)
 
     def tw(self, t, font) -> float:
         return font.getlength(t) / self.s

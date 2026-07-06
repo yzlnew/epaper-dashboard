@@ -68,11 +68,11 @@ def render(panel, ctx):
     c.dotsicon(panel.W - 150, band_y + 52, w["icon"], R=15, col=icol)
     wt = f"{ds.num(w['temp'], '%.0f')}°"
     c.text(panel.W - 110, band_y + 34, wt, c.doto(40))
-    c.text(panel.W - 110, band_y + 78, w["cn"], c.sans(18, 600), fill="blue")
+    c.ptext(panel.W - 110, band_y + 80, w["cn"], 24, fill="blue")
 
     # AI one-liner across the bottom
     line = _daily_line(ctx)
     c.dot(34, panel.H - 32, 3.4, "red")
-    c.text(48, panel.H - 32, line, c.sans(21, 500), anchor="lm")
-    c.text(panel.W - 24, panel.H - 32, "今日一句", c.sans(12, 500), fill="black", anchor="rm")
+    c.ptext(48, panel.H - 32, line, 24, anchor="lm")
+    c.ptext(panel.W - 24, panel.H - 32, "今日一句", 12, anchor="rm")
     return c.finish()
