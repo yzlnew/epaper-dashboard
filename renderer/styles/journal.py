@@ -1,12 +1,13 @@
 """Style: journal — a text-first "morning paper" front page.
 
-Serif masthead + dateline, then a left column carrying an AI-written 晨报
-briefing (weather + today's headlines digested into ~100 Chinese characters,
-cached daily) above the headline list, and a right sidebar with home sensor
-data. Entirely legible on 1-bit panels; the colour panel adds red/blue accents.
+Masthead row: Doto clock top-left, serif "The Daily" centre, red issue number
+top-right, dateline with the weather in blue, double rule (black + red).
+Left column: AI-written 晨报 briefing (weather + headlines digested into ~100
+Chinese characters, cached daily) above the headline list. Right sidebar:
+home sensor data with health-coloured values, and a weather card.
 
-Without an AI backend the briefing block is dropped and headlines move up —
-the page still works as a plain news front.
+Colour degrades gracefully on the B/W panel (all inks collapse to black).
+Without an AI backend the briefing block is dropped and headlines move up.
 """
 
 from __future__ import annotations
@@ -31,19 +32,32 @@ def _brief(ctx) -> str:
     return ai.try_cached_text("journal-brief", prompt, "")
 
 
+def _level_color(v, good, bad):
+    """green below `good`, yellow up to `bad`, red beyond; black if unknown."""
+    if v is None:
+        return "black"
+    return "green" if v < good else ("yellow" if v <= bad else "red")
+
+
 def render(panel, ctx):
     c = Canvas(panel)
     now, states, news = ctx.now, ctx.states, ctx.news
-
-    # ── masthead ─────────────────────────────────────────────────────────────
-    c.text(panel.W / 2, 30, "The E-Ink Daily", c.garamond(44, 640), anchor="ma")
     w = ds.weather_summary(states)
-    dateline = (f"{now.year}年{now.month}月{now.day}日  "
-                f"{config.CN_WD[now.isoweekday() - 1]}  ·  "
-                f"{w['cn']} {ds.num(w['temp'], '%.0f')}°C")
-    c.ptext(panel.W / 2, 88, dateline, 12, anchor="ma")
+
+    # ── masthead row: clock / title / issue no. ──────────────────────────────
+    c.text(M, 30, now.strftime("%H:%M"), c.doto(34), fill="blue")
+    c.text(panel.W - M, 32, f"NO.{now.timetuple().tm_yday:03d}", c.mono(14, bold=True),
+           fill="red", anchor="ra")
+    c.text(panel.W / 2, 24, "The Daily", c.garamond(46, 640), anchor="ma")
+    pf = c.pixel(12)
+    p1 = (f"{now.year}年{now.month}月{now.day}日  "
+          f"{config.CN_WD[now.isoweekday() - 1]}  ·  ")
+    p2 = f"{w['cn']} {ds.num(w['temp'], '%.0f')}°C"
+    x0 = (panel.W - c.tw(p1 + p2, pf)) / 2
+    c.ptext(x0, 88, p1, 12)
+    c.ptext(x0 + c.tw(p1, pf), 88, p2, 12, fill="blue")
     c.line(M, 114, panel.W - M, 114, width=3)
-    c.line(M, 119, panel.W - M, 119, width=1)
+    c.line(M, 119, panel.W - M, 119, fill="red", width=1)
 
     col_x, col_w = M, 470                     # main column
     sb_x = col_x + col_w + 26                 # sidebar
@@ -78,34 +92,46 @@ def render(panel, ctx):
         c.text(col_x + 30, y - 1, c.ellipsize(hf, it.get("title") or "", col_w - 30), hf)
         y += 31
 
-    # ── sidebar: home data ───────────────────────────────────────────────────
+    # ── sidebar: home data, health-coloured ──────────────────────────────────
     sy = 136
     c.tile(sb_x, sy, sb_w, 250, r=10)
-    c.text(sb_x + 16, sy + 14, "AT HOME", c.mono(13, bold=True))
+    c.rect(sb_x + 16, sy + 16, 4, 14, fill="green")
+    c.text(sb_x + 28, sy + 14, "AT HOME", c.mono(13, bold=True))
+    tv = ds.f(ds.state(states, "temp"))
+    hv = ds.f(ds.state(states, "humidity"))
+    pm = ds.f(ds.state(states, "pm25"))
+    co = ds.f(ds.state(states, "co2"))
     hcho = ds.f(ds.state(states, "hcho"))
+    hug = hcho * 1000 if hcho is not None else None
     rows = [
-        ("室温", ds.num(ds.state(states, "temp")) + " °C"),
-        ("湿度", ds.num(ds.state(states, "humidity"), "%.0f") + " %"),
-        ("PM2.5", ds.num(ds.state(states, "pm25"), "%.0f")),
-        ("CO2", ds.num(ds.state(states, "co2"), "%.0f") + " ppm"),
-        ("甲醛", (ds.num(hcho * 1000 if hcho is not None else None, "%.0f")) + " µg/m³"),
+        ("室温", ds.num(tv) + " °C",
+         "red" if (tv is not None and tv >= 28) else "black"),
+        ("湿度", ds.num(hv, "%.0f") + " %", "blue"),
+        ("PM2.5", ds.num(pm, "%.0f"), _level_color(pm, 35, 75)),
+        ("CO2", ds.num(co, "%.0f") + " ppm", _level_color(co, 800, 1200)),
+        ("甲醛", ds.num(hug, "%.0f") + " µg/m³", _level_color(hug, 50, 80)),
     ]
     ry = sy + 46
     vf, kf = c.mono(16, bold=True), c.sans(14, 600)
-    for k, v in rows:
+    for k, v, col in rows:
         c.text(sb_x + 16, ry, k, kf)
-        c.text(sb_x + sb_w - 16, ry, v, vf, anchor="ra")
+        c.text(sb_x + sb_w - 16, ry, v, vf, fill=col, anchor="ra")
         ry += 38
         if ry < sy + 240:
             c.line(sb_x + 16, ry - 10, sb_x + sb_w - 16, ry - 10, width=1)
 
-    # sidebar footer: clock stamp
-    c.tile(sb_x, sy + 266, sb_w, 78, r=10, fill="black", outline="black")
-    tstr = now.strftime("%H:%M")
-    c.text(sb_x + sb_w / 2, sy + 266 + 39, tstr, c.doto(44), fill="white", anchor="mm")
+    # sidebar footer: weather card (blue, white ink)
+    wy = sy + 264
+    c.tile(sb_x, wy, sb_w, panel.H - wy - 22, r=10, fill="blue", outline="blue")
+    cyc = wy + (panel.H - wy - 22) / 2
+    c.dotsicon(sb_x + 40, cyc, w["icon"], R=13, col="white")
+    c.text(sb_x + 80, cyc - 2, f"{ds.num(w['temp'], '%.0f')}°", c.doto(36),
+           fill="white", anchor="lm")
+    c.ptext(sb_x + sb_w - 18, cyc, w["cn"], 24, fill="white", anchor="rm")
 
     # ── page footer ──────────────────────────────────────────────────────────
     c.line(M, panel.H - 26, panel.W - M, panel.H - 26, width=1)
-    c.text(M, panel.H - 20, "E-PAPER DASHBOARD", c.mono(10))
-    c.text(panel.W - M, panel.H - 20, now.strftime("UPDATED %H:%M"), c.mono(10), anchor="ra")
+    c.dot(M + 3, panel.H - 17, 3, "red")
+    c.text(M + 14, panel.H - 22, "THE DAILY", c.mono(10))
+    c.text(col_x + col_w, panel.H - 22, now.strftime("UPDATED %H:%M"), c.mono(10), anchor="ra")
     return c.finish()
