@@ -56,10 +56,10 @@ def render(panel, ctx):
         c.rect(col_x, y + 2, 4, 14, fill="red")
         c.ptext(col_x + 12, y + 1, "晨报 BRIEFING", 12)
         y += 26
-        bf = c.pixel(12)
-        for line in c.wrap(brief, bf, col_w)[:6]:
-            c.ptext(col_x, y, line, 12)
-            y += 21
+        bf = c.serif(18, 620)   # newspaper body; heavy enough to survive threshold
+        for line in c.wrap(brief, bf, col_w)[:5]:
+            c.text(col_x, y, line, bf)
+            y += 27
         y += 10
         c.line(col_x, y, col_x + col_w, y, width=1)
         y += 16
@@ -68,15 +68,15 @@ def render(panel, ctx):
     c.rect(col_x, y + 2, 4, 14, fill="blue")
     c.ptext(col_x + 12, y + 1, "要闻 HEADLINES", 12)
     y += 30
-    hf = c.pixel(12)
+    hf = c.sans(15, 600)
     if not news:
-        c.ptext(col_x, y, "暂无新闻 / NO FEED", 12)
+        c.text(col_x, y, "暂无新闻 / NO FEED", hf)
     for i, it in enumerate(news[:6]):
         if y > panel.H - 40:
             break
         c.text(col_x, y, f"{i + 1:02d}", c.mono(14, bold=True), fill="red")
-        c.ptext(col_x + 30, y + 2, c.ellipsize(hf, it.get("title") or "", col_w - 30), 12)
-        y += 30
+        c.text(col_x + 30, y - 1, c.ellipsize(hf, it.get("title") or "", col_w - 30), hf)
+        y += 31
 
     # ── sidebar: home data ───────────────────────────────────────────────────
     sy = 136
@@ -91,9 +91,9 @@ def render(panel, ctx):
         ("甲醛", (ds.num(hcho * 1000 if hcho is not None else None, "%.0f")) + " µg/m³"),
     ]
     ry = sy + 46
-    vf = c.mono(16, bold=True)
+    vf, kf = c.mono(16, bold=True), c.sans(14, 600)
     for k, v in rows:
-        c.ptext(sb_x + 16, ry + 2, k, 12)
+        c.text(sb_x + 16, ry, k, kf)
         c.text(sb_x + sb_w - 16, ry, v, vf, anchor="ra")
         ry += 38
         if ry < sy + 240:

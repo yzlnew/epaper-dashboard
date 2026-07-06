@@ -118,12 +118,15 @@ class Canvas:
             cx += chw
         return cx
 
+    _NO_LINE_START = "。，、；：？！）》」』…—·"
+
     def wrap(self, t, font, max_w) -> list[str]:
-        """CJK-aware wrap: break anywhere on CJK, prefer spaces for latin runs."""
+        """CJK-aware wrap: break anywhere on CJK, prefer spaces for latin runs,
+        and hang closing punctuation (a line must not start with 。，…)."""
         lines, line = [], ""
         for ch in t.replace("\n", " "):
             cand = line + ch
-            if self.tw(cand, font) <= max_w:
+            if self.tw(cand, font) <= max_w or (ch in self._NO_LINE_START and line):
                 line = cand
                 continue
             if " " in line and ch.isascii() and ch != " ":

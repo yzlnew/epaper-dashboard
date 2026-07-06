@@ -109,15 +109,17 @@ def render(panel, ctx):
     nw = panel.W - M - nx
     c.tile(nx, by, nw, bh)
     c.header(nx + 20, by + 16, "NEWS", accent="red")
-    ny = by + 48
-    PF = c.pixel(12)
+    ny = by + 46
+    # body text: heavier weight survives the bilevel threshold — thin strokes
+    # are what read as "blurry" on e-ink
+    NEWSF = c.sans(15, 600)
     if not news:
-        c.ptext(nx + 20, ny, "暂无新闻 / NO FEED", 12)
+        c.text(nx + 20, ny, "暂无新闻 / NO FEED", NEWSF)
     for it in news[:4]:
-        if ny > by + bh - 26:
+        if ny > by + bh - 30:
             break
-        c.ptext(nx + 20, ny, "●", 12, fill="red")
-        c.ptext(nx + 36, ny, c.ellipsize(PF, it.get("title") or "", nw - 46), 12)
+        c.text(nx + 20, ny + 2, "●", c.sans(12, 600), fill="red")
+        c.text(nx + 36, ny, c.ellipsize(NEWSF, it.get("title") or "", nw - 46), NEWSF)
         ny += 30
 
     return c.finish()

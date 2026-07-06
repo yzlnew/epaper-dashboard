@@ -73,6 +73,6 @@ def render(panel, ctx):
     # AI one-liner across the bottom
     line = _daily_line(ctx)
     c.dot(34, panel.H - 32, 3.4, "red")
-    c.ptext(48, panel.H - 32, line, 24, anchor="lm")
+    c.text(48, panel.H - 32, line, c.sans(21, 620), anchor="lm")
     c.ptext(panel.W - 24, panel.H - 32, "今日一句", 12, anchor="rm")
     return c.finish()

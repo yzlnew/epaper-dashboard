@@ -79,10 +79,11 @@ cd /root/epaper-dashboard && set -a && . ./.env && set +a
 
 ## 已知坑
 
-- **小号中文（<24px）一律 `c.ptext()`**（Fusion Pixel，原生 12px 的整数倍、ss=1、
-  关抗锯齿）——Noto 等平滑字体在小字号经 AA→阈值/量化后笔画发虚，这是墨水屏中文模糊的
-  头号原因。≥24px 的大字或印刷感场景才用 `c.sans/serif`。测量宽度用 `c.pixel(px)` 配
-  `c.tw/ellipsize/wrap`。
+- **中文正文用加粗平滑字体，标题/标签用像素字体**：正文（新闻、导语、整句）用
+  `c.sans(15+, 600+)` 或 `c.serif(18, 620)` —— 细字重经 AA→阈值/量化会断笔画，这是
+  中文发虚的头号原因，加粗即解；400/500 字重不要用于 <20px 中文。标题、磁贴标签、
+  天气词等短点缀用 `c.ptext()`（Fusion Pixel，原生 12px 整数倍、ss=1、关抗锯齿）。
+  用户反馈：全像素正文不好看，像素体只留标题（2026-07）。
 - Space Mono / Doto 无 CJK 和下标字符（₂、℃ 部分变体）：写 "CO2" 不写 "CO₂"；
   混排用 `c.text_mixed`。fusion-pixel-8px 缺 μ（12px 版齐全）。
 - `Image.convert("1")` 默认带抖动，文本导出要的是阈值 —— 已封装在 `BWPanel.export`，别绕过。
