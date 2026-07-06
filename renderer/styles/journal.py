@@ -120,17 +120,31 @@ def render(panel, ctx):
         if ry < sy + 240:
             c.line(sb_x + 16, ry - 10, sb_x + sb_w - 16, ry - 10, width=1)
 
-    # sidebar footer: weather card (blue, white ink)
+    # sidebar footer: weather card, coloured by conditions — scorching heat
+    # reads red, rain/snow/freezing reads blue, clear sun reads yellow (with
+    # black ink for contrast), anything else stays black.
+    hot = w["temp"] is not None and w["temp"] >= 32
+    freezing = w["temp"] is not None and w["temp"] <= 0
+    if hot:
+        card = "red"
+    elif w["icon"] in ("rain", "snow") or freezing:
+        card = "blue"
+    elif w["icon"] == "sun":
+        card = "yellow"
+    else:
+        card = "black"
+    # on B/W every card colour collapses to black, so ink must stay white there
+    ink = "black" if (card == "yellow" and panel.is_color) else "white"
     wy = sy + 264
-    c.tile(sb_x, wy, sb_w, panel.H - wy - 22, r=10, fill="blue", outline="blue")
+    c.tile(sb_x, wy, sb_w, panel.H - wy - 22, r=10, fill=card, outline=card)
     cyc = wy + (panel.H - wy - 22) / 2
-    c.dotsicon(sb_x + 40, cyc, w["icon"], R=13, col="white")
+    c.dotsicon(sb_x + 40, cyc, w["icon"], R=13, col=ink)
     c.text(sb_x + 80, cyc - 2, f"{ds.num(w['temp'], '%.0f')}°", c.doto(36),
-           fill="white", anchor="lm")
-    c.ptext(sb_x + sb_w - 18, cyc, w["cn"], 24, fill="white", anchor="rm")
+           fill=ink, anchor="lm")
+    c.ptext(sb_x + sb_w - 18, cyc, w["cn"], 24, fill=ink, anchor="rm")
 
-    # ── page footer ──────────────────────────────────────────────────────────
-    c.line(M, panel.H - 26, panel.W - M, panel.H - 26, width=1)
+    # ── page footer (main column only — the weather card owns the corner) ────
+    c.line(M, panel.H - 26, col_x + col_w, panel.H - 26, width=1)
     c.dot(M + 3, panel.H - 17, 3, "red")
     c.text(M + 14, panel.H - 22, "THE DAILY", c.mono(10))
     c.text(col_x + col_w, panel.H - 22, now.strftime("UPDATED %H:%M"), c.mono(10), anchor="ra")
