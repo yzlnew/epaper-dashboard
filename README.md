@@ -93,6 +93,7 @@ esphome run epaper-e6.yaml
 | `journal` | 报纸头版：AI 晨报导语 + 要闻 + 家居数据侧栏 | — | 晨报导语（新闻+天气综述，日缓存） |
 | `mathart` | 程序生成数学图案 + 公式标注：Julia/Mandelbrot/牛顿分形/de Jong 吸引子/harmonograph，按日期轮换（numpy 计算，无网络依赖） | 代码生成 | — |
 | `comic` | 美漫头版：粗框分镜+投影、温度爆炸星、新闻对话气泡、Ben-Day 网点、警报冲出画框、黄色 NARRATOR 旁白框 | — | 每日旁白（日缓存） |
+| `pokemon` | 每日一只宝可梦 + 时间/天气 + 图鉴条目（GameBoy 对话框风）。96×96 像素原素材取自 [PokeAPI sprites](https://github.com/PokeAPI/sprites)，整数倍最近邻放大，按图鉴号落盘缓存，断网自动复用缓存或画精灵球占位（素材版权 © Nintendo/Game Freak，仅个人使用） | 在线像素图 | — |
 
 所有风格同时兼容两种面板；照片风格拉取失败时自动回退 `nothing`，屏幕永远不会白屏/报错。
 
